@@ -7,7 +7,7 @@ import HistoryChart from "./HistoryChart";
 import OfflineBanner from "./OfflineBanner";
 import DashboardSkeleton from "./DashboardSkeleton";
 
-const OFFLINE_THRESHOLD_SECONDS = 10;
+const OFFLINE_THRESHOLD_SECONDS = 60;
 
 export default function Dashboard() {
     const [readings, setReadings] = useState([]);

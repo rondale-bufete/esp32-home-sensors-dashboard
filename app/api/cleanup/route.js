@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 
 export async function GET(request) {
-    // Simple protection so randoms on the internet can't trigger this
     const authHeader = request.headers.get("authorization");
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -10,14 +9,13 @@ export async function GET(request) {
 
     const supabase = createAdminClient();
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const twelveHoursAgo = new Date();
+    twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12);
 
     const { error, count } = await supabase
         .from("readings")
         .delete({ count: "exact" })
-        .lt("created_at", sevenDaysAgo.toISOString());
-
+        .lt("created_at", twelveHoursAgo.toISOString());
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

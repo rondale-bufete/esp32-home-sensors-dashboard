@@ -5,6 +5,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase-client";
 import StatCards from "./StatCards";
 import HistoryChart from "./HistoryChart";
 import OfflineBanner from "./OfflineBanner";
+import DashboardSkeleton from "./DashboardSkeleton";
 
 const OFFLINE_THRESHOLD_SECONDS = 10;
 
@@ -57,11 +58,7 @@ export default function Dashboard() {
     const isOffline = secondsSinceLastReading !== null && secondsSinceLastReading > OFFLINE_THRESHOLD_SECONDS;
 
     if (loading) {
-        return (
-            <div className="max-w-4xl mx-auto p-6">
-                <p className="text-[#A29E97]">Loading readings...</p>
-            </div>
-        );
+        return <DashboardSkeleton />;
     }
 
     return (

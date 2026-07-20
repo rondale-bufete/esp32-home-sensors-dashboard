@@ -4,15 +4,18 @@ import { useState, useEffect } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase-client";
 import StatCards from "./StatCards";
 import HistoryChart from "./HistoryChart";
+import OfflineBanner from "./OfflineBanner";
+
+const OFFLINE_THRESHOLD_SECONDS = 10;
 
 export default function Dashboard() {
     const [readings, setReadings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [now, setNow] = useState(Date.now());
 
     useEffect(() => {
         const supabase = createBrowserSupabaseClient();
 
-        // Initial load
         async function loadInitial() {
             const { data, error } = await supabase
                 .from("readings")
@@ -25,28 +28,33 @@ export default function Dashboard() {
         }
         loadInitial();
 
-        // Subscribe to new readings in real time
         const channel = supabase
             .channel("readings-changes")
             .on(
                 "postgres_changes",
                 { event: "INSERT", schema: "public", table: "readings" },
                 (payload) => {
-                    console.log("Realtime event received:", payload);
                     setReadings((prev) => [payload.new, ...prev].slice(0, 100));
                 }
             )
-            .subscribe((status) => {
-                console.log("Subscription status:", status);
-            });
+            .subscribe();
 
-        // Cleanup: unsubscribe when the component unmounts
         return () => {
             supabase.removeChannel(channel);
         };
     }, []);
 
+    // Tick every second so staleness is checked continuously, not just on new data
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, []);
+
     const latest = readings[0];
+    const secondsSinceLastReading = latest
+        ? Math.floor((now - new Date(latest.created_at).getTime()) / 1000)
+        : null;
+    const isOffline = secondsSinceLastReading !== null && secondsSinceLastReading > OFFLINE_THRESHOLD_SECONDS;
 
     if (loading) {
         return (
@@ -62,7 +70,7 @@ export default function Dashboard() {
                 <h1 className="text-2xl font-semibold font-[family-name:var(--font-display)] text-[#F4F3F1]">
                     Environment Monitor
                 </h1>
-                {latest && (
+                {latest && !isOffline && (
                     <p className="text-xs text-[#6E6A64]">
                         Last updated{" "}
                         {new Date(latest.created_at).toLocaleTimeString(undefined, {
@@ -74,7 +82,9 @@ export default function Dashboard() {
                 )}
             </div>
 
-            <StatCards latest={latest} />
+            {isOffline && <OfflineBanner lastSeenSeconds={secondsSinceLastReading} />}
+
+            <StatCards latest={latest} stale={isOffline} />
             <HistoryChart readings={readings} />
         </div>
     );

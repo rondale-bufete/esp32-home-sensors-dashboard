@@ -1,4 +1,4 @@
-export default function StatCards({ latest }) {
+export default function StatCards({ latest, stale }) {
     if (!latest) {
         return (
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -12,11 +12,11 @@ export default function StatCards({ latest }) {
         );
     }
 
-    const humidityWarning = latest.humidity > 70 || latest.humidity < 30;
-    const tempWarning = latest.temperature > 30;
+    const humidityWarning = !stale && (latest.humidity > 70 || latest.humidity < 30);
+    const tempWarning = !stale && latest.temperature > 30;
 
     return (
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className={`grid grid-cols-2 gap-4 mb-8 transition-opacity ${stale ? "opacity-50" : "opacity-100"}`}>
             <div className="bg-[#1C1B1E] border border-white/[0.06] rounded-xl p-6">
                 <p className="text-sm text-[#A29E97] mb-1">Temperature</p>
                 <p className={`text-4xl font-semibold font-[family-name:var(--font-display)] ${tempWarning ? "text-amber-400" : "text-[#F4F3F1]"}`}>

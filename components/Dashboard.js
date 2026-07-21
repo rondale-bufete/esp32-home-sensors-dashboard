@@ -5,9 +5,12 @@ import { createBrowserSupabaseClient } from "@/lib/supabase-client";
 import StatCards from "./StatCards";
 import HistoryChart from "./HistoryChart";
 import OfflineBanner from "./OfflineBanner";
+import OutdoorWeatherPanel from "./OutdoorWeatherPanel";
+import HourlyForecast from "./HourlyForecast";
+import DailyForecast from "./DailyForecast";
 import DashboardSkeleton from "./DashboardSkeleton";
 
-const OFFLINE_THRESHOLD_SECONDS = 60;
+const OFFLINE_THRESHOLD_SECONDS = 90;
 
 export default function Dashboard() {
     const [readings, setReadings] = useState([]);
@@ -45,7 +48,6 @@ export default function Dashboard() {
         };
     }, []);
 
-    // Tick every second so staleness is checked continuously, not just on new data
     useEffect(() => {
         const interval = setInterval(() => setNow(Date.now()), 1000);
         return () => clearInterval(interval);
@@ -63,8 +65,8 @@ export default function Dashboard() {
 
     return (
         <div className="max-w-4xl mx-auto p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-6">
-                <h1 className="text-xl sm:text-2xl font-semibold font-[family-name:var(--font-display)] text-[#F4F3F1]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-8">
+                <h1 className="text-xl sm:text-2xl font-medium font-[family-name:var(--font-display)] tracking-tight text-[#F4F3F1]">
                     Environment Monitor
                 </h1>
                 {latest && !isOffline && (
@@ -81,8 +83,22 @@ export default function Dashboard() {
 
             {isOffline && <OfflineBanner lastSeenSeconds={secondsSinceLastReading} />}
 
-            <StatCards latest={latest} stale={isOffline} />
-            <HistoryChart readings={readings} />
+            <section className="mb-10">
+                <p className="font-[family-name:var(--font-mono,monospace)] text-xs text-[#818CF8] uppercase tracking-wider mb-3">
+                    Room
+                </p>
+                <StatCards latest={latest} stale={isOffline} />
+                <HistoryChart readings={readings} />
+            </section>
+
+            <section>
+                <p className="font-[family-name:var(--font-mono,monospace)] text-xs text-[#818CF8] uppercase tracking-wider mb-3">
+                    Outside
+                </p>
+                <OutdoorWeatherPanel />
+                <HourlyForecast />
+                <DailyForecast />
+            </section>
         </div>
     );
 }

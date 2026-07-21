@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Environment Monitor",
+  title: "Home Sensors Dashboard - ESP32",
   description: "Live room and weather monitoring dashboard.",
 };
 
